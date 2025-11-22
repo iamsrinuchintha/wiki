@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException, Response
+from contextlib import asynccontextmanager
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
@@ -7,14 +8,28 @@ from app.models import User, Post
 from app.schemas import UserCreate, UserResponse, PostCreate, PostResponse
 from app.metrics import users_created_total, posts_created_total
 
-app = FastAPI(title="User and Post API")
+
+# Helper function to ensure tables exist
+async def ensure_tables_exist():
+    """Create tables if they don't exist"""
+    try:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+    except Exception as e:
+        print(f"Error ensuring database tables exist: {e}")
 
 
 # Create database tables on startup
-@app.on_event("startup")
-async def startup():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: Create tables
+    await ensure_tables_exist()
+    yield
+    # Shutdown: Clean up if needed
+    await engine.dispose()
+
+
+app = FastAPI(title="User and Post API", lifespan=lifespan)
 
 
 @app.post("/users", response_model=UserResponse)
@@ -30,6 +45,9 @@ async def create_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
     - name: Name of the user
     - created_time: Time the user was created
     """
+    # Ensure tables exist (in case database was deleted after startup)
+    await ensure_tables_exist()
+    
     new_user = User(name=user.name)
     db.add(new_user)
     await db.commit()
@@ -60,6 +78,9 @@ async def create_post(post: PostCreate, db: AsyncSession = Depends(get_db)):
     - user_id: ID of the user who created the post
     - created_time: Time the post was created
     """
+    # Ensure tables exist (in case database was deleted after startup)
+    await ensure_tables_exist()
+    
     # Check if user exists
     result = await db.execute(select(User).where(User.id == post.user_id))
     user = result.scalar_one_or_none()
@@ -93,6 +114,9 @@ async def get_user(id: int, db: AsyncSession = Depends(get_db)):
     - name: Name of the user
     - created_time: Time the user was created
     """
+    # Ensure tables exist (in case database was deleted after startup)
+    await ensure_tables_exist()
+    
     result = await db.execute(select(User).where(User.id == id))
     user = result.scalar_one_or_none()
 
@@ -117,6 +141,9 @@ async def get_post(id: int, db: AsyncSession = Depends(get_db)):
     - user_id: ID of the user who created the post
     - created_time: Time the post was created
     """
+    # Ensure tables exist (in case database was deleted after startup)
+    await ensure_tables_exist()
+    
     result = await db.execute(select(Post).where(Post.id == id))
     post = result.scalar_one_or_none()
 
