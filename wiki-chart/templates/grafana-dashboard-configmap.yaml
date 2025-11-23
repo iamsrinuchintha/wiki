@@ -1,0 +1,85 @@
+{{- if .Values.grafana.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-config
+data:
+  dashboards.yaml: |
+    apiVersion: 1
+    providers:
+      - name: 'default'
+        orgId: 1
+        folder: ''
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard
+  labels:
+    grafana_dashboard: "1"
+data:
+  creation-dashboard.json: |
+    {
+      "id": null,
+      "uid": "creation-dashboard-678",
+      "title": "Creation Dashboard",
+      "tags": ["wiki", "creation"],
+      "timezone": "browser",
+      "schemaVersion": 16,
+      "version": 0,
+      "refresh": "10s",
+      "panels": [
+        {
+          "id": 1,
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+          "type": "timeseries",
+          "title": "Rate of Users and Posts Creation",
+          "targets": [
+            {
+              "expr": "rate(users_created_total[5m])",
+              "legendFormat": "Users Creation Rate",
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "Prometheus"
+              }
+            },
+            {
+              "expr": "rate(posts_created_total[5m])",
+              "legendFormat": "Posts Creation Rate",
+              "refId": "B",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "Prometheus"
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps",
+              "custom": {
+                "axisLabel": "Rate (per second)"
+              }
+            }
+          }
+        }
+      ],
+      "time": {
+        "from": "now-1h",
+        "to": "now"
+      },
+      "timepicker": {},
+      "templating": {
+        "list": []
+      },
+      "annotations": {
+        "list": []
+      }
+    }
+{{- end }}
+

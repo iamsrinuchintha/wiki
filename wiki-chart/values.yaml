@@ -1,0 +1,70 @@
+# FastAPI Configuration
+fastapi:
+  image_name: wiki-service
+  image_tag: latest
+  replicas: 1
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  env:
+    DB_HOST: postgresql
+    DB_PORT: "5432"
+    DB_USER: postgres
+    DB_PASSWORD: postgres
+    DB_NAME: wiki_db
+
+# PostgreSQL Configuration
+postgresql:
+  enabled: true
+  image: postgres:15-alpine
+  replicas: 1
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  database: wiki_db
+  username: postgres
+  password: postgres
+  storage: 2Gi
+
+# Prometheus Configuration
+prometheus:
+  enabled: true
+  image: prom/prometheus:latest
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+  storage: 1Gi
+
+# Grafana Configuration
+grafana:
+  enabled: true
+  image: grafana/grafana:latest
+  admin_user: admin
+  admin_password: admin
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+  storage: 1Gi
+
+# Ingress Configuration
+ingress:
+  enabled: true
+  className: nginx
+  annotations: {}
+
