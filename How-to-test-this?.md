@@ -1,7 +1,3 @@
-# Wiki K3d Local Runner
-
-This project allows you to build and run the `wiki-k3d` Docker image locally for testing.
-
 ## Quick Start
 
 ### Build the image
