@@ -94,6 +94,8 @@ done
 # Ensure KUBECONFIG is set
 export KUBECONFIG=$(k3d kubeconfig write wiki-cluster)
 
+kubectl delete -A ValidatingWebhookConfiguration ingress-nginx-admission
+
 # Install Helm chart
 echo "Installing Helm chart..."
 cd /workspace
